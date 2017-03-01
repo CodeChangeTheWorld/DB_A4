@@ -4,7 +4,7 @@ project(DB_A4)
 set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCE_FILES
-        #Main/BPlusTest/source/BPlusQUnit.cc
+        Main/BPlusTest/source/BPlusQUnit.cc
         Main/BufferMgr/headers/CheckLRU.h
         Main/BufferMgr/headers/MyDB_BufferManager.h
         Main/BufferMgr/headers/MyDB_Page.h
@@ -54,7 +54,8 @@ set(SOURCE_FILES
         Main/Record/source/MyDB_AttVal.cc
         Main/Record/source/MyDB_Record.cc
         #Main/RecordTest/source/RecordQUnit.cc
-        Main/SortTest/source/SortQUnit.cc)
+        #Main/SortTest/source/SortQUnit.cc
+        )
 include_directories(
         Main/BufferMgr/headers
         Main/Catalog/headers
