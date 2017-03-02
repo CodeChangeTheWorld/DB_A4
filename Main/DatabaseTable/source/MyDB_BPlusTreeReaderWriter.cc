@@ -99,16 +99,18 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page , MyDB_RecordPtr rec) {
 
+
 	int newpagenum = getTable()->lastPage() + 1;
 	getTable()->setLastPage(newpagenum);
-	shared_ptr <MyDB_PageReaderWriter> newpage = make_shared <MyDB_PageReaderWriter> (*this, newpagenum);
-	newpage->clear();
+//	shared_ptr <MyDB_PageReaderWriter> newpage = make_shared <MyDB_PageReaderWriter> (*this, newpagenum);
+	MyDB_PageReaderWriter newpage = (*this)[newpagenum];
+	newpage.clear();
 	MyDB_RecordPtr lhs = getEmptyRecord();
 	MyDB_RecordPtr rhs = getEmptyRecord();
-	newpage->setType(RegularPage);
+	newpage.setType(RegularPage);
 	MyDB_RecordPtr currec = getEmptyRecord();
 	if(page.getType() == DirectoryPage){
-		newpage->setType(DirectoryPage);
+		newpage.setType(DirectoryPage);
 		lhs = getINRecord();
 		rhs = getINRecord();
 		currec = getINRecord();
@@ -124,14 +126,14 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	bool added = false;
 	while(bytesConsumed < size/2 && it->advance()){
 		it->getCurrent(currec);
-		if(buildComparator(rec,currec) && !added){
+		if(buildComparator(lhs,rhs) && !added){
 //		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
 			bytesConsumed += rec->getBinarySize();
-			newpage->append(rec);
+			newpage.append(rec);
 			added = true;
 		}
 		bytesConsumed += currec->getBinarySize();
-		newpage->append(currec);
+		newpage.append(currec);
 
 	}
 
@@ -142,7 +144,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	vector<MyDB_RecordPtr> tempvec;
 	while(it->advance()){
 		it->getCurrent(currec);
-		if(buildComparator(rec,currec) && !added){
+		if(buildComparator(lhs,rhs) && !added){
 //		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
 			bytesConsumed += rec->getBinarySize();
 			tempvec.push_back(rec);
@@ -153,6 +155,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	}
 	vector<MyDB_RecordPtr>::iterator iter;
 	page.clear();
+	page.setType(newpage.getType());
 	for(iter = tempvec.begin(); iter != tempvec.end(); iter++){
 		page.append(*iter);
 	}
@@ -161,11 +164,12 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr rec) {
-	shared_ptr <MyDB_PageReaderWriter> curPage = make_shared <MyDB_PageReaderWriter> (*this, page);
+//	shared_ptr <MyDB_PageReaderWriter> curPage = make_shared <MyDB_PageReaderWriter> (*this, page);
+	MyDB_PageReaderWriter curPage = (*this)[page];
 	bool find = true;
 	MyDB_INRecordPtr recin = getINRecord();
-	if(curPage->getType()==DirectoryPage ){
-		MyDB_RecordIteratorAltPtr it =  curPage->getIteratorAlt();
+	if(curPage.getType()==DirectoryPage ){
+		MyDB_RecordIteratorAltPtr it = curPage.getIteratorAlt();
 		while(it->advance() && find){
 			it->getCurrent(recin);
 			if(buildComparator(rec,recin)){
@@ -180,24 +184,24 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr re
 		}
 
 //		MyDB_INRecordPtr newINRec = static_pointer_cast<MyDB_INRecord>(recptr);
-		if(curPage->append(recptr)){
+		if(curPage.append(recptr)){
 			// sort
 			MyDB_RecordPtr lhs = getEmptyRecord();
 			MyDB_RecordPtr rhs = getEmptyRecord();
 			MyDB_INRecordPtr other = getINRecord();
 			function <bool()> comparator = buildComparator(recptr, other);
-			curPage->sortInPlace(comparator,recptr,other);
+			curPage.sortInPlace(comparator,recptr,other);
 			return nullptr;
 		}else{
-			return split(*curPage,recptr);
+			return split(curPage,recptr);
 		}
 
 
-	}else if(curPage->getType() == RegularPage ){
-		if(curPage->append(rec)){
+	}else if(curPage.getType() == RegularPage ){
+		if(curPage.append(rec)){
 			return nullptr;
 		}else{
-			return split(*curPage,rec);
+			return split(curPage,rec);
 		}
 	}
 
