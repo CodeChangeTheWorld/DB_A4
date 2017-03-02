@@ -12,15 +12,28 @@ MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName,
 	MyDB_BufferManagerPtr myBuffer) : MyDB_TableReaderWriter (forMe, myBuffer) {
 
 	// find the ordering attribute
-	auto res = forMe->getSchema ()->getAttByName (orderOnAttName);
+	auto res = forMe->getSchema()->getAttByName (orderOnAttName);
 
 	// remember information about the ordering attribute
 	orderingAttType = res.second;
 	whichAttIsOrdering = res.first;
-
 	// and the root location
 	rootLocation = getTable ()->getRootLocation ();
+	if(rootLocation==-1){
+		getTable()->setRootLocation(0);
+		rootLocation =0;
+	}
+	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
+	rootPage->setType(DirectoryPage);
+	rootPage->clear();
+	MyDB_INRecordPtr rootNode = getINRecord();
+	rootNode->setPtr(1);
+	rootPage->append(rootNode);
+
+	shared_ptr <MyDB_PageReaderWriter> leafPage = make_shared <MyDB_PageReaderWriter> (*this, 1);
+	leafPage->setType(RegularPage);
 }
+
 
 MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getSortedRangeIteratorAlt (MyDB_AttValPtr, MyDB_AttValPtr) {
 	return nullptr;
@@ -35,7 +48,32 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int, vector <MyDB_PageReaderWr
 	return false;
 }
 
-void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr) {
+void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
+	//locate to the page that the record belong
+
+	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
+	bool find = false;
+	shared_ptr <MyDB_PageReaderWriter> curPage = rootPage;
+	MyDB_INRecordPtr recin = getINRecord();
+	while(!find){
+		MyDB_RecordIteratorAltPtr it=  curPage->getIteratorAlt();
+		while(it->advance()){
+			it->getCurrent(recin);
+			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
+				find = true;
+				break;
+			}
+		}
+
+	}
+
+	MyDB_RecordPtr newRec = append(recin->getPtr(), rec);
+	if(newRec != nullptr){
+		MyDB_INRecordPtr newINRec = dynamic_pointer_cast<MyDB_INRecord>(newRec);
+		// build a new root
+
+	}
+
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter, MyDB_RecordPtr) {
@@ -43,6 +81,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter, MyDB_
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int, MyDB_RecordPtr) {
+	//i
+
 	return nullptr;
 }
 
