@@ -97,8 +97,37 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 
 }
 
-MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter, MyDB_RecordPtr) {
-	return nullptr;
+MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page , MyDB_RecordPtr rec) {
+	vector<MyDB_RecordPtr> myvec;
+	myvec.push_back(rec);
+	MyDB_RecordIteratorAltPtr it =page.getIteratorAlt();
+	MyDB_RecordPtr currec = getEmptyRecord();
+	while(it->advance()){
+		it->getCurrent(currec);
+		myvec.push_back(currec);
+	}
+	MyDB_RecordPtr lhs = getEmptyRecord();
+	MyDB_RecordPtr rhs = getEmptyRecord();
+	std::stable_sort(myvec.begin(),myvec.end(),buildComparator(lhs,rhs));
+	int half = myvec.size()/2;
+	page.clear();
+	for(int i=half;i<myvec.size();i++){
+		page.append(myvec[i]);
+	}
+
+	int newpagenum = getTable()->lastPage() + 1;
+	getTable()->setLastPage(newpagenum);
+	shared_ptr <MyDB_PageReaderWriter> newpage = make_shared <MyDB_PageReaderWriter> (*this, newpagenum);
+
+	for(int i=0;i<half;i++){
+		newpage->append(myvec[i]);
+	}
+
+	MyDB_INRecordPtr newItem = getINRecord();
+	newItem->setKey(myvec[half]->getAtt(whichAttIsOrdering));
+	newItem->setPtr(newpagenum);
+	return newItem;
+
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr rec) {
