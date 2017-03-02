@@ -79,7 +79,7 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 		leafPage->setType(RegularPage);
 	}
 
-	
+
 	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
 	bool find = false;
 	shared_ptr <MyDB_PageReaderWriter> curPage = rootPage;
@@ -106,9 +106,9 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 			MyDB_RecordPtr rhs = getEmptyRecord();
 			curPage->sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
 		}else{
-
 			// if need new root
-			MyDB_INRecordPtr leftINRec = static_pointer_cast<MyDB_INRecord>(split(*curPage,newINRec));
+			MyDB_RecordPtr tempptr = split(*curPage,newINRec);
+			MyDB_INRecordPtr leftINRec = static_pointer_cast<MyDB_INRecord>(tempptr);
 			// build a new root
 			MyDB_INRecordPtr rightINRec = getINRecord();
 			rightINRec->setPtr(rootLocation);
@@ -116,11 +116,11 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 			getTable()->setLastPage(newroot);
 			getTable()->setRootLocation(newroot);
 			rootLocation = getTable()->getRootLocation();
-			shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
-			rootPage->setType(DirectoryPage);
-			rootPage->clear();
-			rootPage->append(leftINRec);
-			rootPage->append(rightINRec);
+			shared_ptr <MyDB_PageReaderWriter> newrootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
+			newrootPage->clear();
+			newrootPage->setType(DirectoryPage);
+			newrootPage->append(leftINRec);
+			newrootPage->append(rightINRec);
 		}
 
 	}
@@ -143,7 +143,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	bool added = false;
 	while(bytesConsumed < size/2 && it->advance()){
 		it->getCurrent(currec);
-		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
+		if(buildComparator(rec,currec) && !added){
+//		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
 			bytesConsumed += rec->getBinarySize();
 			newpage->append(rec);
 			added = true;
@@ -160,7 +161,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	vector<MyDB_RecordPtr> tempvec;
 	while(it->advance()){
 		it->getCurrent(currec);
-		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
+		if(buildComparator(rec,currec) && !added){
+//		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
 			bytesConsumed += rec->getBinarySize();
 			tempvec.push_back(rec);
 			added = true;
@@ -185,7 +187,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr re
 		MyDB_RecordIteratorAltPtr it =  curPage->getIteratorAlt();
 		while(it->advance() && find){
 			it->getCurrent(recin);
-			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
+			if(buildComparator(rec,recin)){
+//			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
 				find = false;
 				break;
 			}
