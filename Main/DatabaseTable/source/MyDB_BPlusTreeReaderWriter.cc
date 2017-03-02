@@ -25,7 +25,7 @@ MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName,
 	}
 	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
 	rootPage->setType(DirectoryPage);
-	rootPage->clear();
+//	rootPage->clear();
 	MyDB_INRecordPtr rootNode = getINRecord();
 	rootNode->setPtr(1);
 	rootPage->append(rootNode);
@@ -56,7 +56,7 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 	shared_ptr <MyDB_PageReaderWriter> curPage = rootPage;
 	MyDB_INRecordPtr recin = getINRecord();
 	while(!find){
-		MyDB_RecordIteratorAltPtr it=  curPage->getIteratorAlt();
+		MyDB_RecordIteratorAltPtr it =  curPage->getIteratorAlt();
 		while(it->advance()){
 			it->getCurrent(recin);
 			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
@@ -68,7 +68,7 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 
 	MyDB_RecordPtr newRec = append(recin->getPtr(), rec);
 	if(newRec != nullptr){
-		MyDB_INRecordPtr newINRec = dynamic_pointer_cast<MyDB_INRecord>(newRec);
+		MyDB_INRecordPtr newINRec = static_pointer_cast<MyDB_INRecord>(newRec);
 
 		if(curPage->append(newINRec)){
 			// sort
@@ -78,7 +78,7 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 		}else{
 
 			// if need new root
-			MyDB_INRecordPtr leftINRec = dynamic_pointer_cast<MyDB_INRecord>(split(*curPage,newINRec));
+			MyDB_INRecordPtr leftINRec = static_pointer_cast<MyDB_INRecord>(split(*curPage,newINRec));
 			// build a new root
 			MyDB_INRecordPtr rightINRec = getINRecord();
 			rightINRec->setPtr(rootLocation);
@@ -98,36 +98,53 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page , MyDB_RecordPtr rec) {
-	vector<MyDB_RecordPtr> myvec;
-	myvec.push_back(rec);
-	MyDB_RecordIteratorAltPtr it =page.getIteratorAlt();
-	MyDB_RecordPtr currec = getEmptyRecord();
-	while(it->advance()){
-		it->getCurrent(currec);
-		myvec.push_back(currec);
-	}
-	MyDB_RecordPtr lhs = getEmptyRecord();
-	MyDB_RecordPtr rhs = getEmptyRecord();
-	std::stable_sort(myvec.begin(),myvec.end(),buildComparator(lhs,rhs));
-	int half = myvec.size()/2;
-	page.clear();
-	for(int i=half;i<myvec.size();i++){
-		page.append(myvec[i]);
-	}
 
 	int newpagenum = getTable()->lastPage() + 1;
 	getTable()->setLastPage(newpagenum);
 	shared_ptr <MyDB_PageReaderWriter> newpage = make_shared <MyDB_PageReaderWriter> (*this, newpagenum);
 
-	for(int i=0;i<half;i++){
-		newpage->append(myvec[i]);
+	MyDB_RecordPtr lhs = getEmptyRecord();
+	MyDB_RecordPtr rhs = getEmptyRecord();
+	page.sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
+	int size = page.getPageSize();
+	int bytesConsumed = 0;
+ 	MyDB_RecordIteratorAltPtr it =	page.getIteratorAlt();
+	MyDB_RecordPtr currec = getEmptyRecord();
+	bool added = false;
+	while(it->advance() && bytesConsumed < size/2){
+		it->getCurrent(currec);
+		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
+			bytesConsumed += rec->getBinarySize();
+			newpage->append(rec);
+			added = true;
+		}
+		bytesConsumed += currec->getBinarySize();
+		newpage->append(currec);
+
 	}
 
 	MyDB_INRecordPtr newItem = getINRecord();
-	newItem->setKey(myvec[half]->getAtt(whichAttIsOrdering));
+	newItem->setKey(currec->getAtt(whichAttIsOrdering));
 	newItem->setPtr(newpagenum);
-	return newItem;
 
+	vector<MyDB_RecordPtr> tempvec;
+	while(it->advance()){
+		it->getCurrent(currec);
+		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
+			bytesConsumed += rec->getBinarySize();
+			tempvec.push_back(rec);
+			added = true;
+		}
+		bytesConsumed += currec->getBinarySize();
+		tempvec.push_back(currec);
+	}
+	vector<MyDB_RecordPtr>::iterator iter;
+	page.clear();
+	for(iter = tempvec.begin(); iter != tempvec.end(); iter++){
+		page.append(*iter);
+	}
+
+	return newItem;
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr rec) {
@@ -148,7 +165,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr re
 			return nullptr;
 		}
 
-		MyDB_INRecordPtr newINRec = dynamic_pointer_cast<MyDB_INRecord>(recptr);
+		MyDB_INRecordPtr newINRec = static_pointer_cast<MyDB_INRecord>(recptr);
 		if(curPage->append(newINRec)){
 			// sort
 			MyDB_RecordPtr lhs = getEmptyRecord();
