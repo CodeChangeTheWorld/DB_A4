@@ -87,7 +87,8 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 		MyDB_RecordIteratorAltPtr it =  curPage->getIteratorAlt();
 		while(it->advance()){
 			it->getCurrent(recin);
-			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
+			if(buildComparator(rec,recin)){
+//			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
 				find = true;
 				break;
 			}
