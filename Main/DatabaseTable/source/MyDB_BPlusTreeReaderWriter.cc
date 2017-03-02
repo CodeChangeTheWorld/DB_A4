@@ -102,20 +102,25 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	int newpagenum = getTable()->lastPage() + 1;
 	getTable()->setLastPage(newpagenum);
 	shared_ptr <MyDB_PageReaderWriter> newpage = make_shared <MyDB_PageReaderWriter> (*this, newpagenum);
+	newpage->clear();
 	MyDB_RecordPtr lhs = getEmptyRecord();
 	MyDB_RecordPtr rhs = getEmptyRecord();
 	newpage->setType(RegularPage);
+	MyDB_RecordPtr currec = getEmptyRecord();
 	if(page.getType() == DirectoryPage){
 		newpage->setType(DirectoryPage);
 		lhs = getINRecord();
 		rhs = getINRecord();
+		currec = getINRecord();
 	}
 	function <bool()> comparator = buildComparator(lhs, rhs);
+//	cout<<"0"<<endl;
 	page.sortInPlace(comparator,lhs,rhs);
+//	cout<<"1"<<endl;
 	int size = page.getPageSize();
 	int bytesConsumed = 0;
  	MyDB_RecordIteratorAltPtr it =	page.getIteratorAlt();
-	MyDB_RecordPtr currec = getEmptyRecord();
+
 	bool added = false;
 	while(bytesConsumed < size/2 && it->advance()){
 		it->getCurrent(currec);
