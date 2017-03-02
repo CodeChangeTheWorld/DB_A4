@@ -19,25 +19,6 @@ MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName,
 	whichAttIsOrdering = res.first;
 	// and the root location
 	rootLocation = getTable ()->getRootLocation ();
-//	if(rootLocation==-1){
-//		getTable()->setRootLocation(0);
-//		rootLocation =0;
-//		getTable()->setLastPage(0);
-//	}
-//	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
-//	rootPage->clear();
-////	this->operator[](rootLocation) = *rootPage;
-//	lastPage = rootPage;
-//	rootPage->setType(DirectoryPage);
-//
-//	MyDB_INRecordPtr rootNode = getINRecord();
-//	rootNode->setPtr(1);
-//	rootPage->append(rootNode);
-//	getTable()->setLastPage(1);
-//	shared_ptr <MyDB_PageReaderWriter> leafPage = make_shared <MyDB_PageReaderWriter> (*this, getTable()->lastPage());
-//	leafPage->clear();
-//	lastPage = leafPage;
-//	leafPage->setType(RegularPage);
 
 }
 
@@ -60,9 +41,10 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 	//locate to the page that the record belong
 	rootLocation = getTable()->getRootLocation();
 
+	// check if activated
 	if(rootLocation == -1){
 		getTable()->setRootLocation(0);
-		rootLocation =0;
+		rootLocation = getTable()->getRootLocation();
 		getTable()->setLastPage(0);
 		shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
 		rootPage->clear();
@@ -102,8 +84,8 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 
 		if(curPage->append(newINRec)){
 			// sort
-			MyDB_RecordPtr lhs = getEmptyRecord();
-			MyDB_RecordPtr rhs = getEmptyRecord();
+			MyDB_RecordPtr lhs = getINRecord();
+			MyDB_RecordPtr rhs = getINRecord();
 			curPage->sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
 		}else{
 			// if need new root
@@ -132,9 +114,15 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	int newpagenum = getTable()->lastPage() + 1;
 	getTable()->setLastPage(newpagenum);
 	shared_ptr <MyDB_PageReaderWriter> newpage = make_shared <MyDB_PageReaderWriter> (*this, newpagenum);
-
 	MyDB_RecordPtr lhs = getEmptyRecord();
 	MyDB_RecordPtr rhs = getEmptyRecord();
+	newpage->setType(RegularPage);
+	if(page.getType() == DirectoryPage){
+		newpage->setType(DirectoryPage);
+		lhs = getINRecord();
+		rhs = getINRecord();
+	}
+
 	page.sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
 	int size = page.getPageSize();
 	int bytesConsumed = 0;
@@ -155,7 +143,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	}
 
 	MyDB_INRecordPtr newItem = getINRecord();
-	newItem->setKey(currec->getAtt(whichAttIsOrdering));
+	newItem->setKey(getKey(currec));
 	newItem->setPtr(newpagenum);
 
 	vector<MyDB_RecordPtr> tempvec;
