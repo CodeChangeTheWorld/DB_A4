@@ -19,25 +19,26 @@ MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName,
 	whichAttIsOrdering = res.first;
 	// and the root location
 	rootLocation = getTable ()->getRootLocation ();
-	if(rootLocation==-1){
-		getTable()->setRootLocation(0);
-		rootLocation =0;
-		getTable()->setLastPage(0);
-	}
-	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
-	rootPage->clear();
-//	this->operator[](rootLocation) = *rootPage;
-	lastPage = rootPage;
-	rootPage->setType(DirectoryPage);
+//	if(rootLocation==-1){
+//		getTable()->setRootLocation(0);
+//		rootLocation =0;
+//		getTable()->setLastPage(0);
+//	}
+//	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
+//	rootPage->clear();
+////	this->operator[](rootLocation) = *rootPage;
+//	lastPage = rootPage;
+//	rootPage->setType(DirectoryPage);
+//
+//	MyDB_INRecordPtr rootNode = getINRecord();
+//	rootNode->setPtr(1);
+//	rootPage->append(rootNode);
+//	getTable()->setLastPage(1);
+//	shared_ptr <MyDB_PageReaderWriter> leafPage = make_shared <MyDB_PageReaderWriter> (*this, getTable()->lastPage());
+//	leafPage->clear();
+//	lastPage = leafPage;
+//	leafPage->setType(RegularPage);
 
-	MyDB_INRecordPtr rootNode = getINRecord();
-	rootNode->setPtr(1);
-	rootPage->append(rootNode);
-	getTable()->setLastPage(1);
-	shared_ptr <MyDB_PageReaderWriter> leafPage = make_shared <MyDB_PageReaderWriter> (*this, getTable()->lastPage());
-	leafPage->clear();
-	lastPage = leafPage;
-	leafPage->setType(RegularPage);
 }
 
 
@@ -55,8 +56,29 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int, vector <MyDB_PageReaderWr
 }
 
 void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
+
 	//locate to the page that the record belong
 	rootLocation = getTable()->getRootLocation();
+
+	if(rootLocation == -1){
+		getTable()->setRootLocation(0);
+		rootLocation =0;
+		getTable()->setLastPage(0);
+		shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
+		rootPage->clear();
+		lastPage = rootPage;
+		rootPage->setType(DirectoryPage);
+
+		MyDB_INRecordPtr rootNode = getINRecord();
+		rootNode->setPtr(1);
+		rootPage->append(rootNode);
+		getTable()->setLastPage(1);
+		shared_ptr <MyDB_PageReaderWriter> leafPage = make_shared <MyDB_PageReaderWriter> (*this, getTable()->lastPage());
+		leafPage->clear();
+		lastPage = leafPage;
+		leafPage->setType(RegularPage);
+	}
+
 	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
 	bool find = false;
 	shared_ptr <MyDB_PageReaderWriter> curPage = rootPage;
