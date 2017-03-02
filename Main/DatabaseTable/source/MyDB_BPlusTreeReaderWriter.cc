@@ -64,13 +64,34 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 				break;
 			}
 		}
-
 	}
 
 	MyDB_RecordPtr newRec = append(recin->getPtr(), rec);
 	if(newRec != nullptr){
 		MyDB_INRecordPtr newINRec = dynamic_pointer_cast<MyDB_INRecord>(newRec);
-		// build a new root
+
+		if(curPage->append(newINRec)){
+			// sort
+			MyDB_RecordPtr lhs = getEmptyRecord();
+			MyDB_RecordPtr rhs = getEmptyRecord();
+			curPage->sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
+		}else{
+
+			// if need new root
+			MyDB_INRecordPtr leftINRec = dynamic_pointer_cast<MyDB_INRecord>(split(*curPage,newINRec));
+			// build a new root
+			MyDB_INRecordPtr rightINRec = getINRecord();
+			rightINRec->setPtr(rootLocation);
+			int newroot = getTable()->lastPage() + 1;
+			getTable()->setLastPage(newroot);
+			getTable()->setRootLocation(newroot);
+			rootLocation = getTable()->getRootLocation();
+			shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
+			rootPage->setType(DirectoryPage);
+			rootPage->clear();
+			rootPage->append(leftINRec);
+			rootPage->append(rightINRec);
+		}
 
 	}
 
@@ -80,8 +101,43 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter, MyDB_
 	return nullptr;
 }
 
-MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int, MyDB_RecordPtr) {
-	//i
+MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr rec) {
+	shared_ptr <MyDB_PageReaderWriter> curPage = make_shared <MyDB_PageReaderWriter> (*this, page);
+	bool find = true;
+	MyDB_INRecordPtr recin = getINRecord();
+	if(curPage->getType()==DirectoryPage ){
+		MyDB_RecordIteratorAltPtr it =  curPage->getIteratorAlt();
+		while(it->advance() && find){
+			it->getCurrent(recin);
+			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
+				find = false;
+				break;
+			}
+		}
+		MyDB_RecordPtr recptr = append(recin->getPtr(),rec);
+		if(recptr == nullptr){
+			return nullptr;
+		}
+
+		MyDB_INRecordPtr newINRec = dynamic_pointer_cast<MyDB_INRecord>(recptr);
+		if(curPage->append(newINRec)){
+			// sort
+			MyDB_RecordPtr lhs = getEmptyRecord();
+			MyDB_RecordPtr rhs = getEmptyRecord();
+			curPage->sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
+			return nullptr;
+		}else{
+			return split(*curPage,newINRec);
+		}
+
+
+	}else if(curPage->getType() == RegularPage ){
+		if(curPage->append(rec)){
+			return nullptr;
+		}else{
+			return split(*curPage,rec);
+		}
+	}
 
 	return nullptr;
 }
