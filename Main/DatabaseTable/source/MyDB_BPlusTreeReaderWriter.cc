@@ -63,47 +63,35 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 
 
 	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
-	bool find = false;
-	shared_ptr <MyDB_PageReaderWriter> curPage = rootPage;
-	MyDB_INRecordPtr recin = getINRecord();
-	while(!find){
-		MyDB_RecordIteratorAltPtr it =  curPage->getIteratorAlt();
-		while(it->advance()){
-			it->getCurrent(recin);
-			if(buildComparator(rec,recin)){
-//			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
-				find = true;
-				break;
-			}
-		}
-	}
+//	bool find = false;
+//	shared_ptr <MyDB_PageReaderWriter> curPage = rootPage;
+//	MyDB_INRecordPtr recin = getINRecord();
+//	while(!find){
+//		MyDB_RecordIteratorAltPtr it =  curPage->getIteratorAlt();
+//		while(it->advance()){
+//			it->getCurrent(recin);
+//			if(buildComparator(rec,recin)){
+//				find = true;
+//				break;
+//			}
+//		}
+//	}
+//
+	MyDB_RecordPtr newRec = append(rootLocation, rec);
 
-	MyDB_RecordPtr newRec = append(recin->getPtr(), rec);
 	if(newRec != nullptr){
-		MyDB_INRecordPtr newINRec = static_pointer_cast<MyDB_INRecord>(newRec);
-
-		if(curPage->append(newINRec)){
-			// sort
-			MyDB_RecordPtr lhs = getINRecord();
-			MyDB_RecordPtr rhs = getINRecord();
-			curPage->sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
-		}else{
-			// if need new root
-			MyDB_RecordPtr tempptr = split(*curPage,newINRec);
-			MyDB_INRecordPtr leftINRec = static_pointer_cast<MyDB_INRecord>(tempptr);
-			// build a new root
-			MyDB_INRecordPtr rightINRec = getINRecord();
-			rightINRec->setPtr(rootLocation);
-			int newroot = getTable()->lastPage() + 1;
-			getTable()->setLastPage(newroot);
-			getTable()->setRootLocation(newroot);
-			rootLocation = getTable()->getRootLocation();
-			shared_ptr <MyDB_PageReaderWriter> newrootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
-			newrootPage->clear();
-			newrootPage->setType(DirectoryPage);
-			newrootPage->append(leftINRec);
-			newrootPage->append(rightINRec);
-		}
+		int oldroot = rootLocation;
+		int newroot = getTable()->lastPage() + 1;
+		getTable()->setLastPage(newroot);
+		getTable()->setRootLocation(newroot);
+		rootLocation = getTable()->getRootLocation();
+		shared_ptr <MyDB_PageReaderWriter> newrootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
+		newrootPage->clear();
+		newrootPage->setType(DirectoryPage);
+		newrootPage->append(newRec);
+		MyDB_INRecordPtr secRec = getINRecord();
+		secRec->setPtr(oldroot);
+		newrootPage->append(secRec);
 
 	}
 
@@ -122,8 +110,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 		lhs = getINRecord();
 		rhs = getINRecord();
 	}
-
-	page.sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
+	function <bool()> comparator = buildComparator(lhs, rhs);
+	page.sortInPlace(comparator,lhs,rhs);
 	int size = page.getPageSize();
 	int bytesConsumed = 0;
  	MyDB_RecordIteratorAltPtr it =	page.getIteratorAlt();
@@ -176,25 +164,27 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr re
 		while(it->advance() && find){
 			it->getCurrent(recin);
 			if(buildComparator(rec,recin)){
-//			if(recin->getKey()>rec->getAtt(whichAttIsOrdering)){
 				find = false;
 				break;
 			}
 		}
-		MyDB_RecordPtr recptr = append(recin->getPtr(),rec);
+//		MyDB_RecordPtr recptr = append(recin->getPtr(),rec);
+		auto recptr = append(recin->getPtr(),rec);
 		if(recptr == nullptr){
 			return nullptr;
 		}
 
-		MyDB_INRecordPtr newINRec = static_pointer_cast<MyDB_INRecord>(recptr);
-		if(curPage->append(newINRec)){
+//		MyDB_INRecordPtr newINRec = static_pointer_cast<MyDB_INRecord>(recptr);
+		if(curPage->append(recptr)){
 			// sort
 			MyDB_RecordPtr lhs = getEmptyRecord();
 			MyDB_RecordPtr rhs = getEmptyRecord();
-			curPage->sortInPlace(buildComparator(lhs,rhs),lhs,rhs);
+			MyDB_INRecordPtr other = getINRecord();
+			function <bool()> comparator = buildComparator(recptr, other);
+			curPage->sortInPlace(comparator,recptr,other);
 			return nullptr;
 		}else{
-			return split(*curPage,newINRec);
+			return split(*curPage,recptr);
 		}
 
 
