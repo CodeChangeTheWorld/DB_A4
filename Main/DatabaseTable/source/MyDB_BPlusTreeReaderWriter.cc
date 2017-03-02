@@ -79,6 +79,7 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 		leafPage->setType(RegularPage);
 	}
 
+	
 	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
 	bool find = false;
 	shared_ptr <MyDB_PageReaderWriter> curPage = rootPage;
