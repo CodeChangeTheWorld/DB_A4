@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/DB_A4.dir/Main/BPlusTest/source/BPlusQUnit.cc.o"
   "CMakeFiles/DB_A4.dir/Main/BufferMgr/source/MyDB_BufferManager.cc.o"
   "CMakeFiles/DB_A4.dir/Main/BufferMgr/source/MyDB_Page.cc.o"
   "CMakeFiles/DB_A4.dir/Main/Catalog/source/MyDB_Catalog.cc.o"
@@ -16,7 +17,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/DB_A4.dir/Main/DatabaseTable/source/Sorting.cc.o"
   "CMakeFiles/DB_A4.dir/Main/Record/source/MyDB_AttVal.cc.o"
   "CMakeFiles/DB_A4.dir/Main/Record/source/MyDB_Record.cc.o"
-  "CMakeFiles/DB_A4.dir/Main/SortTest/source/SortQUnit.cc.o"
   "DB_A4.pdb"
   "DB_A4"
 )

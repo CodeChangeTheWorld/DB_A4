@@ -48,10 +48,10 @@ RM = /Applications/CLion.app/Contents/bin/cmake/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/liufang/Documents/Courses/comp530/DB_A4
+CMAKE_SOURCE_DIR = "/Users/cj/Documents/17 Spring/comp 530/assignments/assign4/DB_A4"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/liufang/Documents/Courses/comp530/DB_A4/cmake-build-debug
+CMAKE_BINARY_DIR = "/Users/cj/Documents/17 Spring/comp 530/assignments/assign4/DB_A4/cmake-build-debug"
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/liufang/Documents/Courses/comp530/DB_A4/cmake-build-debug/CMakeFiles /Users/liufang/Documents/Courses/comp530/DB_A4/cmake-build-debug/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start "/Users/cj/Documents/17 Spring/comp 530/assignments/assign4/DB_A4/cmake-build-debug/CMakeFiles" "/Users/cj/Documents/17 Spring/comp 530/assignments/assign4/DB_A4/cmake-build-debug/CMakeFiles/progress.marks"
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/liufang/Documents/Courses/comp530/DB_A4/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start "/Users/cj/Documents/17 Spring/comp 530/assignments/assign4/DB_A4/cmake-build-debug/CMakeFiles" 0
 .PHONY : all
 
 # The main clean target
@@ -122,6 +122,33 @@ DB_A4: cmake_check_build_system
 DB_A4/fast:
 	$(MAKE) -f CMakeFiles/DB_A4.dir/build.make CMakeFiles/DB_A4.dir/build
 .PHONY : DB_A4/fast
+
+Main/BPlusTest/source/BPlusQUnit.o: Main/BPlusTest/source/BPlusQUnit.cc.o
+
+.PHONY : Main/BPlusTest/source/BPlusQUnit.o
+
+# target to build an object file
+Main/BPlusTest/source/BPlusQUnit.cc.o:
+	$(MAKE) -f CMakeFiles/DB_A4.dir/build.make CMakeFiles/DB_A4.dir/Main/BPlusTest/source/BPlusQUnit.cc.o
+.PHONY : Main/BPlusTest/source/BPlusQUnit.cc.o
+
+Main/BPlusTest/source/BPlusQUnit.i: Main/BPlusTest/source/BPlusQUnit.cc.i
+
+.PHONY : Main/BPlusTest/source/BPlusQUnit.i
+
+# target to preprocess a source file
+Main/BPlusTest/source/BPlusQUnit.cc.i:
+	$(MAKE) -f CMakeFiles/DB_A4.dir/build.make CMakeFiles/DB_A4.dir/Main/BPlusTest/source/BPlusQUnit.cc.i
+.PHONY : Main/BPlusTest/source/BPlusQUnit.cc.i
+
+Main/BPlusTest/source/BPlusQUnit.s: Main/BPlusTest/source/BPlusQUnit.cc.s
+
+.PHONY : Main/BPlusTest/source/BPlusQUnit.s
+
+# target to generate assembly for a file
+Main/BPlusTest/source/BPlusQUnit.cc.s:
+	$(MAKE) -f CMakeFiles/DB_A4.dir/build.make CMakeFiles/DB_A4.dir/Main/BPlusTest/source/BPlusQUnit.cc.s
+.PHONY : Main/BPlusTest/source/BPlusQUnit.cc.s
 
 Main/BufferMgr/source/MyDB_BufferManager.o: Main/BufferMgr/source/MyDB_BufferManager.cc.o
 
@@ -582,33 +609,6 @@ Main/Record/source/MyDB_Record.cc.s:
 	$(MAKE) -f CMakeFiles/DB_A4.dir/build.make CMakeFiles/DB_A4.dir/Main/Record/source/MyDB_Record.cc.s
 .PHONY : Main/Record/source/MyDB_Record.cc.s
 
-Main/SortTest/source/SortQUnit.o: Main/SortTest/source/SortQUnit.cc.o
-
-.PHONY : Main/SortTest/source/SortQUnit.o
-
-# target to build an object file
-Main/SortTest/source/SortQUnit.cc.o:
-	$(MAKE) -f CMakeFiles/DB_A4.dir/build.make CMakeFiles/DB_A4.dir/Main/SortTest/source/SortQUnit.cc.o
-.PHONY : Main/SortTest/source/SortQUnit.cc.o
-
-Main/SortTest/source/SortQUnit.i: Main/SortTest/source/SortQUnit.cc.i
-
-.PHONY : Main/SortTest/source/SortQUnit.i
-
-# target to preprocess a source file
-Main/SortTest/source/SortQUnit.cc.i:
-	$(MAKE) -f CMakeFiles/DB_A4.dir/build.make CMakeFiles/DB_A4.dir/Main/SortTest/source/SortQUnit.cc.i
-.PHONY : Main/SortTest/source/SortQUnit.cc.i
-
-Main/SortTest/source/SortQUnit.s: Main/SortTest/source/SortQUnit.cc.s
-
-.PHONY : Main/SortTest/source/SortQUnit.s
-
-# target to generate assembly for a file
-Main/SortTest/source/SortQUnit.cc.s:
-	$(MAKE) -f CMakeFiles/DB_A4.dir/build.make CMakeFiles/DB_A4.dir/Main/SortTest/source/SortQUnit.cc.s
-.PHONY : Main/SortTest/source/SortQUnit.cc.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -618,6 +618,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... DB_A4"
+	@echo "... Main/BPlusTest/source/BPlusQUnit.o"
+	@echo "... Main/BPlusTest/source/BPlusQUnit.i"
+	@echo "... Main/BPlusTest/source/BPlusQUnit.s"
 	@echo "... Main/BufferMgr/source/MyDB_BufferManager.o"
 	@echo "... Main/BufferMgr/source/MyDB_BufferManager.i"
 	@echo "... Main/BufferMgr/source/MyDB_BufferManager.s"
@@ -669,9 +672,6 @@ help:
 	@echo "... Main/Record/source/MyDB_Record.o"
 	@echo "... Main/Record/source/MyDB_Record.i"
 	@echo "... Main/Record/source/MyDB_Record.s"
-	@echo "... Main/SortTest/source/SortQUnit.o"
-	@echo "... Main/SortTest/source/SortQUnit.i"
-	@echo "... Main/SortTest/source/SortQUnit.s"
 .PHONY : help
 
 

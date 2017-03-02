@@ -1,4 +1,4 @@
-/Applications/CLion.app/Contents/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /Users/liufang/Documents/Courses/comp530/DB_A4
+/Applications/CLion.app/Contents/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" "/Users/cj/Documents/17 Spring/comp 530/assignments/assign4/DB_A4"
 -- Configuring done
 -- Generating done
--- Build files have been written to: /Users/liufang/Documents/Courses/comp530/DB_A4/cmake-build-debug
+-- Build files have been written to: /Users/cj/Documents/17 Spring/comp 530/assignments/assign4/DB_A4/cmake-build-debug

@@ -140,7 +140,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
  	MyDB_RecordIteratorAltPtr it =	page.getIteratorAlt();
 	MyDB_RecordPtr currec = getEmptyRecord();
 	bool added = false;
-	while(it->advance() && bytesConsumed < size/2){
+	while(bytesConsumed < size/2 && it->advance()){
 		it->getCurrent(currec);
 		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
 			bytesConsumed += rec->getBinarySize();
