@@ -63,6 +63,7 @@ int main (int argc, char *argv[]) {
                         counter++;
                 }
 		bool result = (counter == 10000);
+		cout<< counter <<endl;
 		if (result)
 			cout << "\tTEST PASSED\n";
 		else
@@ -87,6 +88,7 @@ int main (int argc, char *argv[]) {
                         counter++;
                 }
 		bool result = (counter == 10000);
+		cout<< counter <<endl;
 		if (result)
 			cout << "\tTEST PASSED\n";
 		else
@@ -110,6 +112,7 @@ int main (int argc, char *argv[]) {
                         myIter->getCurrent (temp);
                         counter++;
                 }
+		cout<<counter<<endl;
 		bool result = (counter == 10000);
 		if (result)
 			cout << "\tTEST PASSED\n";
@@ -134,6 +137,7 @@ int main (int argc, char *argv[]) {
                         myIter->getCurrent (temp);
                         counter++;
                 }
+		cout<<counter<<endl;
 		bool result = (counter == 320000);
 		if (result)
 			cout << "\tTEST PASSED\n";

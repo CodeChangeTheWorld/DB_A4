@@ -64,6 +64,7 @@ MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyD
 
 
 bool MyDB_BPlusTreeReaderWriter :: discoverPages (int, vector <MyDB_PageReaderWriter> &, MyDB_AttValPtr, MyDB_AttValPtr) {
+
 	return false;
 }
 
@@ -142,16 +143,22 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
  	MyDB_RecordIteratorAltPtr it =	page.getIteratorAlt();
 
 	bool added = false;
+	function <bool()> innercomparator = buildComparator(rec, currec);
 	while(bytesConsumed < size/2 && it->advance()){
 		it->getCurrent(currec);
-		if(buildComparator(lhs,rhs) && !added){
-//		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
+		if(!innercomparator() && !added){
 			bytesConsumed += rec->getBinarySize();
-			newpage.append(rec);
+			bool test = newpage.append(rec);
+			if(!test){
+				cout<<"233"<<endl;
+			}
 			added = true;
 		}
 		bytesConsumed += currec->getBinarySize();
-		newpage.append(currec);
+		bool test = newpage.append(currec);
+		if(!test){
+			cout<<"233333"<<endl;
+		}
 
 	}
 
@@ -162,8 +169,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	vector<MyDB_RecordPtr> tempvec;
 	while(it->advance()){
 		it->getCurrent(currec);
-		if(buildComparator(lhs,rhs) && !added){
-//		if(rec->getAtt(whichAttIsOrdering) < currec->getAtt(whichAttIsOrdering) && !added){
+		if(innercomparator() && !added){
 			bytesConsumed += rec->getBinarySize();
 			tempvec.push_back(rec);
 			added = true;
@@ -175,14 +181,16 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	page.clear();
 	page.setType(newpage.getType());
 	for(iter = tempvec.begin(); iter != tempvec.end(); iter++){
-		page.append(*iter);
+		bool test = page.append(*iter);
+		if(!test){
+			cout<<"233"<<endl;
+		}
 	}
 
 	return newItem;
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr rec) {
-//	shared_ptr <MyDB_PageReaderWriter> curPage = make_shared <MyDB_PageReaderWriter> (*this, page);
 	MyDB_PageReaderWriter curPage = (*this)[page];
 	bool find = true;
 	MyDB_INRecordPtr recin = getINRecord();
