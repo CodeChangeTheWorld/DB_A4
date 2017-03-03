@@ -293,6 +293,7 @@ function <bool ()>  MyDB_BPlusTreeReaderWriter :: buildComparator (MyDB_RecordPt
 
 	MyDB_AttValPtr lhAtt, rhAtt;
 
+    
 	// in this case, the LHS is an IN record
 	if (lhs->getSchema () == nullptr) {
 		lhAtt = lhs->getAtt (0);	
