@@ -64,6 +64,7 @@ int main (int argc, char *argv[]) {
                 }
 		bool result = (counter == 10000);
 		cout<< counter <<endl;
+		supplierTable.printTree();
 		if (result)
 			cout << "\tTEST PASSED\n";
 		else
