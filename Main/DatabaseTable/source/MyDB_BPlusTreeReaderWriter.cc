@@ -63,7 +63,40 @@ MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyD
 }
 
 
-bool MyDB_BPlusTreeReaderWriter :: discoverPages (int, vector <MyDB_PageReaderWriter> &, MyDB_AttValPtr, MyDB_AttValPtr) {
+bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_PageReaderWriter> &list,
+													   MyDB_AttValPtr low, MyDB_AttValPtr high) {
+	MyDB_PageReaderWriter startpage = (*this)[whichPage];
+	if(startpage.getType()== RegularPage){
+		list.push_back(startpage);
+		return true;
+	}else{
+		MyDB_INRecordPtr lowrec = getINRecord();
+		MyDB_INRecordPtr highrec = getINRecord();
+		MyDB_INRecordPtr other;
+		lowrec->setKey(low);
+		highrec->setKey(high);
+		bool gtlow=false, lthigh=true, foundleaf = false;
+		function<bool ()> lowcomparator = buildComparator(lowrec,other);
+		function<bool ()> highcomparator = buildComparator(highrec,other);
+		MyDB_RecordIteratorAltPtr it = startpage->getIteratorAlt();
+		while(it->advance()){
+			it->getCurrent(other);
+			if(lowcomparator()){
+				gtlow= true;
+			}
+			if(gtlow && lthigh){
+				if(foundleaf){
+					list.push_back((*this)[other->getPtr()]);
+				}else{
+					foundleaf = discoverPages(other->getPtr(),list,low,high);
+				}
+			}
+			if(highcomparator()){
+				lthigh=false;
+			}
+		}
+		return false;
+	}
 
 	return false;
 }
@@ -191,6 +224,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr rec) {
+//	shared_ptr <MyDB_PageReaderWriter> curPage = make_shared <MyDB_PageReaderWriter> (*this, page);
 	MyDB_PageReaderWriter curPage = (*this)[page];
 	bool find = true;
 	MyDB_INRecordPtr recin = getINRecord();
