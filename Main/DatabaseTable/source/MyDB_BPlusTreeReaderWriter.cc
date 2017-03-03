@@ -23,12 +23,43 @@ MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName,
 }
 
 
-MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getSortedRangeIteratorAlt (MyDB_AttValPtr, MyDB_AttValPtr) {
-	return nullptr;
+MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getSortedRangeIteratorAlt (MyDB_AttValPtr low, MyDB_AttValPtr high) {
+	vector <MyDB_PageReaderWriter> vec;
+	discoverPages(rootLocation, vec, low, high);
+	MyDB_RecordPtr lhs = getEmptyRecord();
+	MyDB_RecordPtr rhs = getEmptyRecord();
+	MyDB_RecordPtr rec = getEmptyRecord();
+	MyDB_INRecordPtr mylow = getINRecord();
+	MyDB_INRecordPtr myhigh = getINRecord();
+	mylow->setKey(low);
+	myhigh->setKey(high);
+
+	function<bool()> comparator = buildComparator(lhs, rhs);
+	function<bool()> lowcomparator = buildComparator(rec, mylow);
+	function<bool()> highcomparator = buildComparator(myhigh, rec);
+
+
+	return make_shared<MyDB_PageListIteratorSelfSortingAlt>(vec, lhs, rhs, comparator, rec, lowcomparator, highcomparator, true);
 }
 
-MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyDB_AttValPtr, MyDB_AttValPtr) {
-	return nullptr;
+MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyDB_AttValPtr low, MyDB_AttValPtr high) {
+
+	vector <MyDB_PageReaderWriter> vec;
+	discoverPages(rootLocation, vec, low, high);
+	MyDB_RecordPtr lhs = getEmptyRecord();
+	MyDB_RecordPtr rhs = getEmptyRecord();
+	MyDB_RecordPtr rec = getEmptyRecord();
+	MyDB_INRecordPtr mylow = getINRecord();
+	MyDB_INRecordPtr myhigh = getINRecord();
+	mylow->setKey(low);
+	myhigh->setKey(high);
+
+	function<bool()> comparator = buildComparator(lhs, rhs);
+	function<bool()> lowcomparator = buildComparator(rec, mylow);
+	function<bool()> highcomparator = buildComparator(myhigh, rec);
+
+
+	return make_shared<MyDB_PageListIteratorSelfSortingAlt>(vec, lhs, rhs, comparator, rec, lowcomparator, highcomparator, false);
 }
 
 
@@ -63,20 +94,7 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 
 
 	shared_ptr <MyDB_PageReaderWriter> rootPage = make_shared <MyDB_PageReaderWriter> (*this, rootLocation);
-//	bool find = false;
-//	shared_ptr <MyDB_PageReaderWriter> curPage = rootPage;
-//	MyDB_INRecordPtr recin = getINRecord();
-//	while(!find){
-//		MyDB_RecordIteratorAltPtr it =  curPage->getIteratorAlt();
-//		while(it->advance()){
-//			it->getCurrent(recin);
-//			if(buildComparator(rec,recin)){
-//				find = true;
-//				break;
-//			}
-//		}
-//	}
-//
+
 	MyDB_RecordPtr newRec = append(rootLocation, rec);
 
 	if(newRec != nullptr){
