@@ -75,12 +75,12 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
 		lowrec->setKey(low);
 		highrec->setKey(high);
 		bool gtlow=false, lthigh=true, foundleaf = false;
-		function<bool ()> lowcomparator = buildComparator(lowrec,other);
+		function<bool ()> lowcomparator = buildComparator(other,lowrec);
 		function<bool ()> highcomparator = buildComparator(highrec,other);
 		MyDB_RecordIteratorAltPtr it = startpage.getIteratorAlt();
 		while(it->advance()){
 			it->getCurrent(other);
-			if(lowcomparator()){
+			if(!lowcomparator()){
 				gtlow= true;
 			}
 			if(gtlow && lthigh){
@@ -232,26 +232,23 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int page, MyDB_RecordPtr re
 	MyDB_PageReaderWriter curPage = (*this)[page];
 	bool find = true;
 	MyDB_INRecordPtr recin = getINRecord();
+    function<bool()> comparator = buildComparator(recin, rec);
 	if(curPage.getType()==DirectoryPage ){
 		MyDB_RecordIteratorAltPtr it = curPage.getIteratorAlt();
 		while(it->advance() && find){
 			it->getCurrent(recin);
-			if(buildComparator(rec,recin)){
+			if(!comparator()){
 				find = false;
 				break;
 			}
 		}
-//		MyDB_RecordPtr recptr = append(recin->getPtr(),rec);
 		auto recptr = append(recin->getPtr(),rec);
 		if(recptr == nullptr){
 			return nullptr;
 		}
 
-//		MyDB_INRecordPtr newINRec = static_pointer_cast<MyDB_INRecord>(recptr);
 		if(curPage.append(recptr)){
 			// sort
-			MyDB_RecordPtr lhs = getEmptyRecord();
-			MyDB_RecordPtr rhs = getEmptyRecord();
 			MyDB_INRecordPtr other = getINRecord();
 			function <bool()> comparator = buildComparator(recptr, other);
 			curPage.sortInPlace(comparator,recptr,other);
@@ -277,7 +274,6 @@ MyDB_INRecordPtr MyDB_BPlusTreeReaderWriter :: getINRecord () {
 }
 
 void MyDB_BPlusTreeReaderWriter :: printTree () {
-	printmyTree (rootLocation, 0);
 }
 
 MyDB_AttValPtr MyDB_BPlusTreeReaderWriter :: getKey (MyDB_RecordPtr fromMe) {
@@ -327,38 +323,5 @@ function <bool ()>  MyDB_BPlusTreeReaderWriter :: buildComparator (MyDB_RecordPt
 	}
 }
 
-
-
-void MyDB_BPlusTreeReaderWriter :: printmyTree (int whichPage, int depth) {
-
-	MyDB_PageReaderWriter pageToPrint = (*this)[whichPage];
-
-	// print out a leaf page
-	if (pageToPrint.getType () == MyDB_PageType :: RegularPage) {
-//		MyDB_RecordPtr myRec = getEmptyRecord ();
-//		MyDB_RecordIteratorAltPtr temp = pageToPrint.getIteratorAlt ();
-//		while (temp->advance ()) {
-//
-//			temp->getCurrent (myRec);
-//			for (int i = 0; i < depth; i++)
-//				cout << "\t";
-//			cout << myRec << "\n";
-//		}
-
-		// print out a directory page
-	} else {
-
-		MyDB_INRecordPtr myRec = getINRecord ();
-		MyDB_RecordIteratorAltPtr temp = pageToPrint.getIteratorAlt ();
-		while (temp->advance ()) {
-
-			temp->getCurrent (myRec);
-			printmyTree (myRec->getPtr (), depth + 1);
-			for (int i = 0; i < depth; i++)
-				cout << "\t";
-			cout << (MyDB_RecordPtr) myRec << "\n";
-		}
-	}
-}
 
 #endif
