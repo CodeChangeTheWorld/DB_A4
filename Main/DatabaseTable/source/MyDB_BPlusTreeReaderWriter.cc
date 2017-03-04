@@ -71,7 +71,7 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
 	}else{
 		MyDB_INRecordPtr lowrec = getINRecord();
 		MyDB_INRecordPtr highrec = getINRecord();
-		MyDB_INRecordPtr other;
+		MyDB_INRecordPtr other = getINRecord();
 		lowrec->setKey(low);
 		highrec->setKey(high);
 		bool gtlow=false, lthigh=true, foundleaf = false;
@@ -156,8 +156,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 
 
 	int newpagenum = getTable()->lastPage() + 1;
-	getTable()->setLastPage(newpagenum);
-//	shared_ptr <MyDB_PageReaderWriter> newpage = make_shared <MyDB_PageReaderWriter> (*this, newpagenum);
+//	getTable()->setLastPage(newpagenum);
 	MyDB_PageReaderWriter newpage = (*this)[newpagenum];
 	newpage.clear();
 	MyDB_RecordPtr lhs = getEmptyRecord();
@@ -171,10 +170,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 		currec = getINRecord();
 	}
 	function <bool()> comparator = buildComparator(lhs, rhs);
-//	cout<<"0"<<endl;
 	page.sortInPlace(comparator,lhs,rhs);
-//	cout<<"1"<<endl;
-	int size = page.getPageSize();
+	int size = page.getPageSize() - sizeof (size_t) * 2;
 	int bytesConsumed = 0;
  	MyDB_RecordIteratorAltPtr it =	page.getIteratorAlt();
 
@@ -182,7 +179,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 	function <bool()> innercomparator = buildComparator(rec, currec);
 	while(bytesConsumed < size/2 && it->advance()){
 		it->getCurrent(currec);
-		if(!innercomparator() && !added){
+		if(!added && innercomparator()){
 			bytesConsumed += rec->getBinarySize();
 			bool test = newpage.append(rec);
 			if(!test){
@@ -204,15 +201,20 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter page ,
 
 	vector<MyDB_RecordPtr> tempvec;
 	while(it->advance()){
-		it->getCurrent(currec);
-		if(innercomparator() && !added){
+        MyDB_RecordPtr temprec;
+        if(page.getType() == RegularPage) temprec = getEmptyRecord();
+        else temprec = getINRecord();
+        function <bool()> innercomparator = buildComparator(rec, temprec);
+		it->getCurrent(temprec);
+		if(!added && innercomparator()){
 			bytesConsumed += rec->getBinarySize();
 			tempvec.push_back(rec);
 			added = true;
 		}
 		bytesConsumed += currec->getBinarySize();
-		tempvec.push_back(currec);
+		tempvec.push_back(temprec);
 	}
+    if(!added) tempvec.push_back(rec);
 	vector<MyDB_RecordPtr>::iterator iter;
 	page.clear();
 	page.setType(newpage.getType());
@@ -333,15 +335,15 @@ void MyDB_BPlusTreeReaderWriter :: printmyTree (int whichPage, int depth) {
 
 	// print out a leaf page
 	if (pageToPrint.getType () == MyDB_PageType :: RegularPage) {
-		MyDB_RecordPtr myRec = getEmptyRecord ();
-		MyDB_RecordIteratorAltPtr temp = pageToPrint.getIteratorAlt ();
-		while (temp->advance ()) {
-
-			temp->getCurrent (myRec);
-			for (int i = 0; i < depth; i++)
-				cout << "\t";
-			cout << myRec << "\n";
-		}
+//		MyDB_RecordPtr myRec = getEmptyRecord ();
+//		MyDB_RecordIteratorAltPtr temp = pageToPrint.getIteratorAlt ();
+//		while (temp->advance ()) {
+//
+//			temp->getCurrent (myRec);
+//			for (int i = 0; i < depth; i++)
+//				cout << "\t";
+//			cout << myRec << "\n";
+//		}
 
 		// print out a directory page
 	} else {
