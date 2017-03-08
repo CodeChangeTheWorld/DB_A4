@@ -102,10 +102,7 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
 	}
 	return false;
 }
-//bool MyDB_BPlusTreeReaderWriter :: discoverPages (int, vector <MyDB_PageReaderWriter> &, MyDB_AttValPtr, MyDB_AttValPtr) {
-//
-//	return false;
-//}
+
 
 void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr rec) {
 
