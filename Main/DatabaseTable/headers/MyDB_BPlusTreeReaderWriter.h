@@ -45,7 +45,7 @@ public:
 	// print the contents of the tree to the screen
 	void printTree ();
 private:
-
+	void printTree (int page, int level);
 	/* NOTE THAT EACH OF THESE METHODS ARE OPTIONAL.  They are a suggestion for a set of helper
            methods that you might consider including in order to get your stuff to work. */
 
